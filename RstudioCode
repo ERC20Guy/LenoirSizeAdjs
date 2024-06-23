@@ -1,0 +1,41 @@
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(plotly)
+
+# Function to insert line breaks in strings
+insert_line_breaks <- function(text, width) {
+  paste(strwrap(text, width = width), collapse = "<br>")
+}
+
+# Preprocess legend text for ARADJT and ARDESC
+data <- data %>%
+  mutate(ARADJT_wrapped = sapply(ARADJT, insert_line_breaks, width = 30),
+         ARDESC_wrapped = sapply(ARDESC, insert_line_breaks, width = 30))
+
+# Create the ggplot object
+p <- ggplot(data, aes(x = ARADJQ, y = ARADJP, group = interaction(ARADJT_wrapped, ARDESC_wrapped), color = ARADJT_wrapped)) +
+  geom_line(size = 0.05) +
+  geom_point(aes(shape = ARDESC_wrapped), size = 0.5) +  # Adjust point size here
+  labs(title = "Comparison of ARADJP vs ARADJQ",
+       x = "ARADJQ",
+       y = "ARADJP",
+       color = "ARADJT",
+       shape = "ARDESC") +
+  theme_minimal() +
+  xlim(0, 10000)
+
+# Convert ggplot to plotly
+interactive_plot <- ggplotly(p)
+
+# Update x-axis ticks to show increments of 500 and labels as 0, 1, 2, ...
+interactive_plot <- layout(
+  interactive_plot,
+  xaxis = list(
+    tickvals = seq(0, 10000, by = 500),
+    ticktext = seq(0, 20, by = 1)
+  )
+)
+
+# Print the interactive plot
+interactive_plot
